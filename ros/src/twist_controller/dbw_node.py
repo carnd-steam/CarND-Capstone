@@ -5,6 +5,9 @@ from std_msgs.msg import Bool
 from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
 from geometry_msgs.msg import TwistStamped
 import math
+from pid import PID
+from yaw_controller import YawController
+
 
 from twist_controller import Controller
 
@@ -32,6 +35,11 @@ that we have created in the `__init__` function.
 '''
 
 class DBWNode(object):
+    linear_x_proposed = 0
+    angular_z_proposed = 0
+    linear_x_current = 0
+    angular_z_current = 0
+
     def __init__(self):
         rospy.init_node('dbw_node')
 
@@ -54,20 +62,36 @@ class DBWNode(object):
                                          BrakeCmd, queue_size=1)
 
         # TODO: Create `TwistController` object
-        # self.controller = TwistController(<Arguments you wish to provide>)
+        min_speed = 0.5
         self.controller = Controller()
+        self.yaw = YawController(wheel_base, steer_ratio, min_speed, max_lat_accel, max_steer_angle)
 
         # TODO: Subscribe to all the topics you need to
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
 
         self.loop()
 
+    def twist_cb(self, twist_msg):
+        self.linear_x_proposed = twist_msg.twist.linear.x
+        self.angular_z_proposed = twist_msg.twist.angular.z
+
+    def velocity_cb(self, velocity_msg):
+        self.linear_x_current = velocity_msg.twist.linear.x
+        self.angular_z_current = velocity_msg.twist.angular.z
+
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
+        pid = PID(0.4, 0.4, 0.4)
+        sample_time = 0.02 # 50 Hz, period = 1/f
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
-            # You should only publish the control commands if dbw is enabled
-            throttle, brake, steering = self.controller.control()
-            if True:
+            error = self.angular_z_proposed - self.angular_z_current
+            linear_error = self.linear_x_proposed - self.linear_x_current
+            step = pid.step(linear_error, sample_time)
+            step /= 60.0
+            steer = self.yaw.get_steering(self.linear_x_proposed, self.angular_z_proposed, self.linear_x_current)
+            throttle, brake, steering = self.controller.control(step, steer)
+            if True: #TODO: Change this to dbw_enabled
                 self.publish(throttle, brake, steering)
             rate.sleep()
 

@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+import tf
 
 import math, time
 
@@ -27,6 +28,9 @@ LOOKAHEAD_WPS    = 200 # Number of waypoints we will publish. You can change thi
 class WaypointUpdater(object):
 
     x = -1
+    yaw = -1
+    y = -1
+    waypoints = []
     future_waypoints = []
 
     def __init__(self):
@@ -45,14 +49,35 @@ class WaypointUpdater(object):
         rospy.spin()
 
     def pose_cb(self, msg):
-        self.x = msg.pose.position.x
+        quaternion = (
+           msg.pose.orientation.x,
+           msg.pose.orientation.y,
+           msg.pose.orientation.z,
+           msg.pose.orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        roll = euler[0]
+        pitch = euler[1]
+        yaw = euler[2]
+        car_yaw = yaw
+        car_x = msg.pose.position.x
+        car_y = msg.pose.position.y
 
-    def waypoints_cb(self, waypoints):
         start = False
         length_of_future_waypoints = 0
+        self.future_waypoints = []
         while length_of_future_waypoints < LOOKAHEAD_WPS:
-            for waypoint in waypoints.waypoints:
-                if not start and abs(self.x - waypoint.pose.pose.position.x) < 1:
+            for waypoint in self.waypoints:
+                quaternion = (
+                   waypoint.pose.pose.orientation.x,
+                   waypoint.pose.pose.orientation.y,
+                   waypoint.pose.pose.orientation.z,
+                   waypoint.pose.pose.orientation.w)
+                euler = tf.transformations.euler_from_quaternion(quaternion)
+                waypoint_yaw = euler[2]
+                waypoint_x = waypoint.pose.pose.position.x
+                waypoint_y = waypoint.pose.pose.position.y
+                car_x_in_waypoint = (car_x - waypoint_x) * math.cos(-waypoint_yaw) - (car_y - waypoint_y) * math.sin(-waypoint_yaw)
+                if not start and car_x_in_waypoint < 0:
                     start = True
                 if start:
                     self.future_waypoints.append(waypoint)
@@ -69,6 +94,8 @@ class WaypointUpdater(object):
         lane.waypoints = self.future_waypoints
         self.final_waypoints_pub.publish(lane)
 
+    def waypoints_cb(self, waypoints):
+        self.waypoints = waypoints.waypoints
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement

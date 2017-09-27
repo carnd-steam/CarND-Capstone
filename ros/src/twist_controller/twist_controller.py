@@ -1,14 +1,12 @@
-
 GAS_DENSITY = 2.858
 ONE_MPH = 0.44704
 
 
 class Controller(object):
-    def __init__(self, *args, **kwargs):
-        # TODO: Implement
+
+    def __init__(self):
         pass
 
-    def control(self, *args, **kwargs):
-        # TODO: Change the arg, kwarg list to suit your needs
+    def control(self, throttle, steering_step):
         # Return throttle, brake, steer
-        return 1., 0., 0.
+        return throttle, 0., steering_step
