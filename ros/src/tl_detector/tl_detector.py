@@ -10,6 +10,8 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+import math
+import numpy as np
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -48,6 +50,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        self.light_stop_positions = []
 
         rospy.spin()
 
@@ -100,8 +103,25 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
-        #TODO implement
-        return 0
+        pose_x = pose.position.x
+        pose_y = pose.position.y
+        return self.get_closest_waypoint_by_x_y(pose_x, pose_y)
+
+
+    def get_closest_waypoint_by_x_y(self, pose_x, pose_y):
+        min_distance = 99999
+        min_index = -1
+        if self.waypoints:
+            for i,waypoint in enumerate(self.waypoints.waypoints):
+                x = waypoint.pose.pose.position.x
+                y = waypoint.pose.pose.position.y
+                distance = math.sqrt(math.pow(pose_x - x, 2) + math.pow(pose_y - y, 2))
+                if distance < min_distance:
+                    min_distance = distance
+                    min_index = i
+            return min_index
+        else:
+            return None
 
 
     def project_to_image_plane(self, point_in_world):
@@ -179,12 +199,47 @@ class TLDetector(object):
         if(self.pose):
             car_position = self.get_closest_waypoint(self.pose.pose)
 
-        #TODO find the closest visible traffic light (if one exists)
+        if not self.light_stop_positions:
+            for stop_line_position in stop_line_positions:
+                stop_line_position_x, stop_line_position_y = stop_line_position
+                position_index = self.get_closest_waypoint_by_x_y(stop_line_position_x, stop_line_position_y)
+                self.light_stop_positions.append(position_index)
+
+        min_distance = 10000
+        min_traffic_light_index = -1
+        if self.pose and car_position:
+            for light_stop_position in self.light_stop_positions:
+                distance_car_traffic_light = light_stop_position - car_position
+                if distance_car_traffic_light < min_distance and distance_car_traffic_light > 0:
+                    min_distance = distance_car_traffic_light
+                    min_traffic_light_index = light_stop_position
+
+        if min_distance < 100:
+            light = self.waypoints.waypoints[min_traffic_light_index]
 
         if light:
             state = self.get_light_state(light)
-            return light_wp, state
-        self.waypoints = None
+
+            # TODO: ground truth, must be removed before deployed
+            min_distance = 10000
+            nearest_light_index = None
+            for index_light, ground_truth_light in enumerate(self.lights):
+                nearest_light_x = light.pose.pose.position.x
+                nearest_light_y = light.pose.pose.position.y
+                light_x = ground_truth_light.pose.pose.position.x
+                light_y = ground_truth_light.pose.pose.position.y
+                distance_between_traffic_lights = math.sqrt(math.pow(nearest_light_x - light_x, 2) + math.pow(nearest_light_y - light_y, 2))
+                if distance_between_traffic_lights < min_distance:
+                    min_distance = distance_between_traffic_lights
+                    nearest_light_index = index_light
+            state = self.lights[nearest_light_index].state
+            x = self.lights[nearest_light_index].pose.pose.position.x
+            y = self.lights[nearest_light_index].pose.pose.position.y
+            # end_of_todo
+
+            tl_waypoint_index = self.get_closest_waypoint_by_x_y(x, y)
+            return tl_waypoint_index, state
+        #self.waypoints = None
         return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
