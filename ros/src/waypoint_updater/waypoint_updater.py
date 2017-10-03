@@ -34,6 +34,9 @@ class WaypointUpdater(object):
     y = -1
     waypoints = []
     future_waypoints = []
+    nearest_traffic_light_waypoint_index = -1
+    car_x = -1
+    car_y = -1
 
     def __init__(self):
         rospy.init_node('waypoint_updater')
@@ -49,40 +52,45 @@ class WaypointUpdater(object):
 
         # TODO: Add other member variables you need below
 
-        rospy.spin()
+        #rospy.spin()
+        self.spin()
 
-    def pose_cb(self, msg):
-        quaternion = (
-           msg.pose.orientation.x,
-           msg.pose.orientation.y,
-           msg.pose.orientation.z,
-           msg.pose.orientation.w)
-        euler = tf.transformations.euler_from_quaternion(quaternion)
-        roll = euler[0]
-        pitch = euler[1]
-        yaw = euler[2]
-        car_yaw = yaw
-        car_x = msg.pose.position.x
-        car_y = msg.pose.position.y
+    def spin(self):
+        rate = rospy.Rate(2)
+        while not rospy.is_shutdown():
+            self.publish_points()
+            rate.sleep()
 
+    def publish_points(self):
         start = False
         length_of_future_waypoints = 0
         self.future_waypoints = []
+        red_tl_index = -1
+        speed_reduction = 0
         while length_of_future_waypoints < LOOKAHEAD_WPS:
-            for waypoint in self.waypoints:
+            for waypoint_index, waypoint in enumerate(self.waypoints):
                 quaternion = (
-                   waypoint.pose.pose.orientation.x,
-                   waypoint.pose.pose.orientation.y,
-                   waypoint.pose.pose.orientation.z,
-                   waypoint.pose.pose.orientation.w)
+                    waypoint.pose.pose.orientation.x,
+                    waypoint.pose.pose.orientation.y,
+                    waypoint.pose.pose.orientation.z,
+                    waypoint.pose.pose.orientation.w)
                 euler = tf.transformations.euler_from_quaternion(quaternion)
                 waypoint_yaw = euler[2]
                 waypoint_x = waypoint.pose.pose.position.x
                 waypoint_y = waypoint.pose.pose.position.y
-                car_x_in_waypoint = (car_x - waypoint_x) * math.cos(-waypoint_yaw) - (car_y - waypoint_y) * math.sin(-waypoint_yaw)
+                car_x_in_waypoint = (self.car_x - waypoint_x) * math.cos(-waypoint_yaw) - (self.car_y - waypoint_y) * math.sin(-waypoint_yaw)
                 if not start and car_x_in_waypoint < 0:
                     start = True
+                    # for i in range(LOOKAHEAD_WPS):
+                    #     if waypoint_index + i == self.nearest_traffic_light_waypoint_index:
+                    #         red_tl_index = i
+                    #         break
+                    # if red_tl_index > -1:
+                    #     speed_reduction = 11.11 / red_tl_index
                 if start:
+                    #self.set_waypoint_velocity(self.waypoints, waypoint_index, 0)
+                    #if length_of_future_waypoints <= red_tl_index + 20:
+                    #    waypoint.twist.twist.linear.x = 11.11 - (speed_reduction * length_of_future_waypoints)
                     self.future_waypoints.append(waypoint)
                     length_of_future_waypoints += 1
                 if length_of_future_waypoints >= LOOKAHEAD_WPS:
@@ -96,6 +104,21 @@ class WaypointUpdater(object):
         lane.header.frame_id = 'world'
         lane.waypoints = self.future_waypoints
         self.final_waypoints_pub.publish(lane)
+
+    def pose_cb(self, msg):
+        quaternion = (
+           msg.pose.orientation.x,
+           msg.pose.orientation.y,
+           msg.pose.orientation.z,
+           msg.pose.orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        roll = euler[0]
+        pitch = euler[1]
+        yaw = euler[2]
+        car_yaw = yaw
+        self.car_x = msg.pose.position.x
+        self.car_y = msg.pose.position.y
+
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints.waypoints
