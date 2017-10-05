@@ -29,14 +29,12 @@ DEBUG = True
 
 class WaypointUpdater(object):
 
-    x = -1
-    yaw = -1
-    y = -1
     waypoints = []
     future_waypoints = []
     nearest_traffic_light_waypoint_index = -1
     car_x = -1
     car_y = -1
+    car_yaw = 0
 
     def __init__(self):
         rospy.init_node('waypoint_updater')
@@ -78,8 +76,9 @@ class WaypointUpdater(object):
                 waypoint_yaw = euler[2]
                 waypoint_x = waypoint.pose.pose.position.x
                 waypoint_y = waypoint.pose.pose.position.y
+                distance_car_to_waypoint = math.sqrt(math.pow(self.car_x - waypoint_x, 2) + math.pow(self.car_y - waypoint_y, 2))
                 car_x_in_waypoint = (self.car_x - waypoint_x) * math.cos(-waypoint_yaw) - (self.car_y - waypoint_y) * math.sin(-waypoint_yaw)
-                if not start and car_x_in_waypoint < 0:
+                if not start and car_x_in_waypoint < 0 and distance_car_to_waypoint < 50:
                     start = True
                     # for i in range(LOOKAHEAD_WPS):
                     #     if waypoint_index + i == self.nearest_traffic_light_waypoint_index:
@@ -115,7 +114,7 @@ class WaypointUpdater(object):
         roll = euler[0]
         pitch = euler[1]
         yaw = euler[2]
-        car_yaw = yaw
+        self.car_yaw = yaw
         self.car_x = msg.pose.position.x
         self.car_y = msg.pose.position.y
 
