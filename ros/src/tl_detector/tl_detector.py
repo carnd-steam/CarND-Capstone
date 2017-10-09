@@ -214,7 +214,7 @@ class TLDetector(object):
                     min_distance = distance_car_traffic_light
                     min_traffic_light_index = light_stop_position
 
-        if min_distance < 100:
+        if min_distance < 200:
             light = self.waypoints.waypoints[min_traffic_light_index]
 
         if light:

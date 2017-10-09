@@ -42,15 +42,10 @@ class WaypointUpdater(object):
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
-
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
-        # TODO: Add other member variables you need below
-
-        #rospy.spin()
         self.spin()
 
     def spin(self):
@@ -64,7 +59,6 @@ class WaypointUpdater(object):
         length_of_future_waypoints = 0
         self.future_waypoints = []
         red_tl_index = -1
-        speed_reduction = 0
         while length_of_future_waypoints < LOOKAHEAD_WPS:
             for waypoint_index, waypoint in enumerate(self.waypoints):
                 quaternion = (
@@ -80,16 +74,29 @@ class WaypointUpdater(object):
                 car_x_in_waypoint = (self.car_x - waypoint_x) * math.cos(-waypoint_yaw) - (self.car_y - waypoint_y) * math.sin(-waypoint_yaw)
                 if not start and car_x_in_waypoint < 0 and distance_car_to_waypoint < 50:
                     start = True
-                    # for i in range(LOOKAHEAD_WPS):
-                    #     if waypoint_index + i == self.nearest_traffic_light_waypoint_index:
-                    #         red_tl_index = i
-                    #         break
-                    # if red_tl_index > -1:
-                    #     speed_reduction = 11.11 / red_tl_index
+                    for i in range(LOOKAHEAD_WPS + 200):
+                        if waypoint_index + i == self.nearest_traffic_light_waypoint_index:
+                            red_tl_index = i
+                            break
+                    if red_tl_index >= 0 and red_tl_index < 37:
+                        proposed_speed = 0
+                    elif red_tl_index >= 37 and red_tl_index < 45:
+                        proposed_speed = 1
+                    elif red_tl_index >= 45 and red_tl_index < 60:
+                        proposed_speed = 3
+                    elif red_tl_index >= 60 and red_tl_index < 70:
+                        proposed_speed = 5
+                    elif red_tl_index >= 70 and red_tl_index < 100:
+                        proposed_speed = 7
+                    elif red_tl_index >= 100 and red_tl_index < 120:
+                        proposed_speed = 9
+                    elif red_tl_index >= 120 and red_tl_index < 200:
+                        proposed_speed = 10
+                    else:
+                        proposed_speed = 11.11
+
                 if start:
-                    #self.set_waypoint_velocity(self.waypoints, waypoint_index, 0)
-                    #if length_of_future_waypoints <= red_tl_index + 20:
-                    #    waypoint.twist.twist.linear.x = 11.11 - (speed_reduction * length_of_future_waypoints)
+                    waypoint.twist.twist.linear.x = proposed_speed
                     self.future_waypoints.append(waypoint)
                     length_of_future_waypoints += 1
                 if length_of_future_waypoints >= LOOKAHEAD_WPS:

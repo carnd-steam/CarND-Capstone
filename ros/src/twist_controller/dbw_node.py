@@ -82,18 +82,20 @@ class DBWNode(object):
 
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
-        pid = PID(0.4, 0.4, 0.4)
+        pid = PID(0.8, 0.4, 0.4)
         sample_time = 0.02
         while not rospy.is_shutdown():
             error = self.angular_z_proposed - self.angular_z_current
             linear_error = self.linear_x_proposed - self.linear_x_current
             step = pid.step(linear_error, sample_time)
-            step /= 60.0
+            #step /= 10.0
             steer = self.yaw.get_steering(self.linear_x_proposed, self.angular_z_proposed, self.linear_x_current)
-            #throttle, brake, steering = self.controller.control(step, steer)
-            throttle = step
-            steering = steer
-            brake = 0
+            throttle, brake, steering = self.controller.control(step, steer)
+            brake = -linear_error * 1000
+            if brake < 0:
+                brake = 0
+            if brake > 0:
+                throttle = 0
             if True: #TODO: Change this to dbw_enabled
                 self.publish(throttle, brake, steering)
             rate.sleep()
