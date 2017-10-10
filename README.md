@@ -1,3 +1,15 @@
+# S-team
+
+This is the 'S-team' repository for capston project of Udacity Self-Driving Car Nanodegree. 
+Team members are:
+
+* arjuna sky kok (sky.kok@speaklikeaking.com)
+* William Du (dm1299onion@gmail.com)
+* Abhinav Deep Singh(your@email.com)
+* Woojin jung(xmprise@gmail.com)
+
+Thank you all.
+
 ## System Architecture
 
 ### Waypoint Updater
