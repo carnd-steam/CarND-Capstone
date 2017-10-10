@@ -26,14 +26,6 @@ class TLDetector(object):
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        '''
-        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
-        helps you acquire an accurate ground truth data source for the traffic light
-        classifier by sending the current color state of all traffic lights in the
-        simulator. When testing on the vehicle, the color state will not be available. You'll need to
-        rely on the position of the light and the camera image to predict it.
-        '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
@@ -196,9 +188,20 @@ class TLDetector(object):
         x, y = self.project_to_image_plane(light.pose.pose.position)
 
         #TODO use light location to zoom in on traffic light in image
+        if (x < 0) or (y < 0) or (x >= cv_image.shape[1]) or (y >= cv_image.shape[0]):
+            return False
+        
+        tmp_img = cv_image
+        crop_value = 90
+        xmin = x - crop_value if (x - crop_value) >= 0 else 0
+        ymin = y - crop_value if (y - crop_value) >= 0 else 0
 
+        xmax = x + crop_value if (x + crop_value) <= tmp_img.shape[1] - 1 else tmp_img.shape[1] - 1
+        ymax = y + crop_value if (y + crop_value) <= tmp_img.shape[0] - 1 else tmp_img.shape[0] - 1
+        crop_img = tmp_img[ymin:ymax, xmin:xmax]
+             
         #Get classification
-        return self.light_classifier.get_classification(cv_image)
+        return self.light_classifier.get_classification(crop_img)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
