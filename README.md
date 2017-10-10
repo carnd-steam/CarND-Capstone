@@ -1,69 +1,51 @@
-This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
+## System Architecture
 
-### Native Installation
+### Waypoint Updater
 
-* Be sure that your workstation is running Ubuntu 16.04 Xenial Xerus or Ubuntu 14.04 Trusty Tahir. [Ubuntu downloads can be found here](https://www.ubuntu.com/download/desktop).
-* If using a Virtual Machine to install Ubuntu, use the following configuration as minimum:
-  * 2 CPU
-  * 2 GB system memory
-  * 25 GB of free hard drive space
+We are given the all waypoints in the circuit. We must find the nearest waypoints ahead of the
+car. All waypoints have x, y coordinates and yaw direction. The way we find whether this waypoint
+is ahead of the car or not by doing two steps:
+* Find the euclidian distance between the car and the waypoint and we throw out all waypoints
+  that have distance bigger than 50.
 
-  The Udacity provided virtual machine has ROS and Dataspeed DBW already installed, so you can skip the next two steps if you are using this.
+  ![alt waypoints](imgs/README_waypoints.png)
 
-* Follow these instructions to install ROS
-  * [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu) if you have Ubuntu 16.04.
-  * [ROS Indigo](http://wiki.ros.org/indigo/Installation/Ubuntu) if you have Ubuntu 14.04.
-* [Dataspeed DBW](https://bitbucket.org/DataspeedInc/dbw_mkz_ros)
-  * Use this option to install the SDK on a workstation that already has ROS installed: [One Line SDK Install (binary)](https://bitbucket.org/DataspeedInc/dbw_mkz_ros/src/81e63fcc335d7b64139d7482017d6a97b405e250/ROS_SETUP.md?fileviewer=file-view-default)
-* Download the [Udacity Simulator](https://github.com/udacity/CarND-Capstone/releases/tag/v1.2).
+* For every waypoint that has been filtered, we transform the world coordinates to local
+  coordinates (from waypoint centric point of view), then we check whether the car coordinate
+  has negative x value or not. If it is, then the waypoint is ahead of the car.
 
-### Docker Installation
-[Install Docker](https://docs.docker.com/engine/installation/)
+  ![alt local coordinates](imgs/README_local_coordinates.png)
 
-Build the docker container
-```bash
-docker build . -t capstone
-```
+### DBW Node
 
-Run the docker file
-```bash
-docker run -p 127.0.0.1:4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --rm -it capstone
-```
+After publishing the final waypoints (the nearest waypoints that are ahead of the car), the
+system will generate the velocity recommendation that we can receive in dbw node part. We got
+the current velocity as well. So we have speed difference or speed error. We can find throttle
+value from pid controller that accept this speed error. The steering value (so we can follow
+the curve of the road) can be taken from yaw controller. If the speed error is negative (meaning
+we exceed our speed recommendation), we set throttle to be 0 and the brake to be negative of
+speed error (which is negative) then multiplied by 1000.
 
-### Usage
+### Traffic Lights Detection
 
-1. Clone the project repository
-```bash
-git clone https://github.com/udacity/CarND-Capstone.git
-```
+**Someone needs to fill this.**
 
-2. Install python dependencies
-```bash
-cd CarND-Capstone
-pip install -r requirements.txt
-```
-3. Make and run styx
-```bash
-cd ros
-catkin_make
-source devel/setup.sh
-roslaunch launch/styx.launch
-```
-4. Run the simulator
+### Waypoint Updater Part 2
 
-### Real world testing
-1. Download [training bag](https://drive.google.com/file/d/0B2_h37bMVw3iYkdJTlRSUlJIamM/view?usp=sharing) that was recorded on the Udacity self-driving car (a bag demonstraing the correct predictions in autonomous mode can be found [here](https://drive.google.com/open?id=0B2_h37bMVw3iT0ZEdlF4N01QbHc))
-2. Unzip the file
-```bash
-unzip traffic_light_bag_files.zip
-```
-3. Play the bag file
-```bash
-rosbag play -l traffic_light_bag_files/loop_with_traffic_light.bag
-```
-4. Launch your project in site mode
-```bash
-cd CarND-Capstone/ros
-roslaunch launch/site.launch
-```
-5. Confirm that traffic light detection works on real life images
+Once we got the red traffic light waypoint, we could calculate how many waypoints the traffic light
+waypoint is ahead of our car. Then we can segment our speed recommendation based on how far
+the red traffic light is.
+
+If it is very near, we can set the speed recommendation to 0 (stop completely). If it is very far,
+we can set it as 11 m / s. In between, we can take the value between 0 and 11.
+
+| How far red light | Speed recommendation |
+| ------------------|:--------------------:|
+| 0 - 37            | 0                    |
+| 37 - 45           | 1                    |
+| 45 - 60           | 3                    |
+| 60 - 70           | 5                    |
+| 70 - 100          | 7                    |
+| 100 - 120         | 9                    |
+| 120 - 200         | 10                   |
+| > 200             | 11.11                |
