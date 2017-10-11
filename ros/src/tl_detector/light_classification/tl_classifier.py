@@ -21,10 +21,10 @@ class TLClassifier(object):
         self.detection_graph = tf.Graph()        
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
-                with tf.gfile.GFile(CKPT, 'rb') as fid:
-                    serialized_graph = fid.read()
-                    od_graph_def.ParseFromString(serialized_graph)
-                    tf.import_graph_def(od_graph_def, name='')
+            with tf.gfile.GFile(CKPT, 'rb') as fid:
+                serialized_graph = fid.read()
+                od_graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(od_graph_def, name='')
         self.sess = tf.Session(graph=self.detection_graph)
         self.image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
         self.detection_boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
