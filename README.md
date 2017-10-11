@@ -5,7 +5,7 @@ Team members are:
 
 * arjuna sky kok (sky.kok@speaklikeaking.com)
 * William Du (dm1299onion@gmail.com)
-* Abhinav Deep Singh(your@email.com)
+* Abhinav Deep Singh(abhinav1010.ads@gmail.com)
 * Woojin jung(xmprise@gmail.com)
 
 Thank you all.
