@@ -67,7 +67,7 @@ class TLClassifier(object):
             else:
                 maxscores = 0
                 for i in range(boxes.shape[0]):
-                    if scores is None or scores[i] > maxscores:
+                    if scores[i] > maxscores:
                         maxscores = scores[i]
                         class_name = self.category_index[classes[i]]['name']
                         print('{}'.format(class_name))
