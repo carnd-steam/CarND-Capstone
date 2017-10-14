@@ -8,8 +8,8 @@ import os
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier 
-        #GRAPH_FILE =  'models/frozen_inference_graph_test_site.pb'    
-        GRAPH_FILE =  'models/frozen_inference_graph_simulator.pb'            
+        GRAPH_FILE =  'models/frozen_inference_graph_test_site.pb'    
+        #GRAPH_FILE =  'models/frozen_inference_graph_simulator.pb'            
         graph_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), GRAPH_FILE)
         
         self.detection_graph = tf.Graph()
