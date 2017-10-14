@@ -42,9 +42,11 @@ speed error (which is negative) then multiplied by 1000.
 
 There are two models for Traffic Lights Detection, one for simulator another for test site.  
 If simulator used, please change GRAPH_FILE='models/frozen_inference_graph_simulator.pb' in tl_classifier.py  
-If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py  
+If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py 
 
-![MobileSSD used simulator](imgs/traffic_light_sim.png)
+![MobileSSD](imgs/traffic_light_sim.png)
+
+If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. 
 
 
 
