@@ -44,6 +44,9 @@ There are two models for Traffic Lights Detection, one for Simulator, another fo
 If simulator is used, please change GRAPH_FILE='models/frozen_inference_graph_simulator.pb' in tl_classifier.py  
 If test site is used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py 
 
+If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return.   
+A pre-trained MobileNet on coco dateset was used. We also collected and annotated simulator and test site data.
+
 ![simulator](imgs/traffic_light_sim.png)
 
 ![site_red](imgs/test_site_red.png)
@@ -53,8 +56,6 @@ If test site is used, please change GRAPH_FILE='models/frozen_inference_graph_te
 ![site_green](imgs/test_site_green.png)
 
 
-
-If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. A pre-trained MobileNet on coco dateset was used. We also collected and annotated simulator and test site data.
 
 
 
