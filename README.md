@@ -46,8 +46,7 @@ If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_
 
 ![MobileSSD](imgs/traffic_light_sim.png)
 
-If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. A pre-trained MobileNet on coco dateset was used to do a transfer learning on ourselves clollected and annotated dataset.
-
+If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. A pre-trained MobileNet on coco dateset was used. We also collected and annotated simulator and test site data.
 
 
 
