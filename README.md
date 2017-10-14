@@ -40,13 +40,14 @@ speed error (which is negative) then multiplied by 1000.
 
 ### Traffic Lights Detection
 
-There are two models for Traffic Lights Detection, one for simulator another for test site.  
+There are two models for Traffic Lights Detection, one for Simulator, another for Udacity Test Site.  
 If simulator used, please change GRAPH_FILE='models/frozen_inference_graph_simulator.pb' in tl_classifier.py  
 If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py 
 
 ![MobileSSD](imgs/traffic_light_sim.png)
 
-If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. 
+If there are mutiple traffic lights are detected, the class of bounding box with highest socres will return. A pre-trained MobileNet on coco dateset was used to do a transfer learning on ourselves clollected and annotated dataset.
+
 
 
 
