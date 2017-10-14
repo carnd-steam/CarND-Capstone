@@ -201,7 +201,8 @@ class TLDetector(object):
         crop_img = tmp_img[ymin:ymax, xmin:xmax]
              
         #Get classification
-        return self.light_classifier.get_classification(crop_img)
+        #return self.light_classifier.get_classification(crop_img)
+        return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
