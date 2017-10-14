@@ -40,10 +40,9 @@ speed error (which is negative) then multiplied by 1000.
 
 ### Traffic Lights Detection
 
-There are two models for Traffic Lights Detection, one for simulator another for test site. 
-If simulator used, please change GRAPH_FILE='models/frozen_inference_graph_simulator.pb' in tl_classifier.py 
-If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py 
-
+There are two models for Traffic Lights Detection, one for simulator another for test site.  
+If simulator used, please change GRAPH_FILE='models/frozen_inference_graph_simulator.pb' in tl_classifier.py  
+If test site used, please change GRAPH_FILE='models/frozen_inference_graph_test_site.pb' in tl_classifier.py  
 
 
 ### Waypoint Updater Part 2
