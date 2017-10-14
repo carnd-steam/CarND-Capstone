@@ -3,9 +3,6 @@ import tensorflow as tf
 import numpy as np
 import rospy
 import os
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageColor
 
 
 class TLClassifier(object):
