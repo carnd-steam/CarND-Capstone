@@ -39,6 +39,7 @@ class DBWNode(object):
     angular_z_proposed = 0
     linear_x_current = 0
     angular_z_current = 0
+    dbw_enabled = 0
 
     def __init__(self):
         rospy.init_node('dbw_node')
@@ -61,14 +62,12 @@ class DBWNode(object):
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
 
-        # TODO: Create `TwistController` object
         min_speed = 0.5
-        self.controller = Controller()
         self.yaw = YawController(wheel_base, steer_ratio, min_speed, max_lat_accel, max_steer_angle)
 
-        # TODO: Subscribe to all the topics you need to
         rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
         rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
 
         self.loop()
 
@@ -80,24 +79,26 @@ class DBWNode(object):
         self.linear_x_current = velocity_msg.twist.linear.x
         self.angular_z_current = velocity_msg.twist.angular.z
 
+    def dbw_enabled_cb(self, msg):
+        self.dbw_enabled = msg.data
+
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
         pid = PID(0.8, 0.4, 0.4)
         sample_time = 0.02
         while not rospy.is_shutdown():
-            error = self.angular_z_proposed - self.angular_z_current
             linear_error = self.linear_x_proposed - self.linear_x_current
-            step = pid.step(linear_error, sample_time)
-            #step /= 10.0
-            steer = self.yaw.get_steering(self.linear_x_proposed, self.angular_z_proposed, self.linear_x_current)
-            throttle, brake, steering = self.controller.control(step, steer)
+            throttle = pid.step(linear_error, sample_time)
+            steering = self.yaw.get_steering(self.linear_x_proposed, self.angular_z_proposed, self.linear_x_current)
             brake = -linear_error * 1000
             if brake < 0:
                 brake = 0
             if brake > 0:
                 throttle = 0
-            if True: #TODO: Change this to dbw_enabled
+            if self.dbw_enabled:
                 self.publish(throttle, brake, steering)
+            else:
+                pid.reset()
             rate.sleep()
 
     def publish(self, throttle, brake, steer):

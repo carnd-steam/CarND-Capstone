@@ -26,14 +26,6 @@ class TLDetector(object):
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        '''
-        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
-        helps you acquire an accurate ground truth data source for the traffic light
-        classifier by sending the current color state of all traffic lights in the
-        simulator. When testing on the vehicle, the color state will not be available. You'll need to
-        rely on the position of the light and the camera image to predict it.
-        '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
@@ -141,22 +133,39 @@ class TLDetector(object):
         image_width = self.config['camera_info']['image_width']
         image_height = self.config['camera_info']['image_height']
 
+        # get principal point
+        cx = image_width / 2
+        cy = image_height / 2
+
         # get transform between pose of camera and world frame
         trans = None
+        rot = None
         try:
             now = rospy.Time.now()
-            self.listener.waitForTransform("/base_link",
-                  "/world", now, rospy.Duration(1.0))
-            (trans, rot) = self.listener.lookupTransform("/base_link",
-                  "/world", now)
+            self.listener.waitForTransform("/base_link", "/world", now, rospy.Duration(1.0))
+            (trans, rot) = self.listener.lookupTransform("/base_link", "/world", now)
 
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             rospy.logerr("Failed to find camera to map transform")
 
-        #TODO Use tranform and rotation to calculate 2D position of light in image
+        # Use tranform and rotation to calculate 2D position of light in image
+        # convert quaternion
+        (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(rot)
+        rvec = np.array([roll, pitch, yaw])
+        tvec = np.array(trans)
 
-        x = 0
-        y = 0
+        # camera intrinsic matrix
+        camera_intrinsic = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+
+        # world map point
+        world_point = np.array([[point_in_world.x, point_in_world.y, point_in_world.z]])      
+
+        # projection point using Opencv
+        projection_point, _ = cv2.projectPoints(world_point, rvec, tvec, camera_intrinsic, None)
+        projection_point_pixel = np.int32(projection_point).reshape(-1, 2)
+        
+        x = projection_point_pixel[0][0]
+        y = projection_point_pixel[0][1]
 
         return (x, y)
 
@@ -179,8 +188,20 @@ class TLDetector(object):
         x, y = self.project_to_image_plane(light.pose.pose.position)
 
         #TODO use light location to zoom in on traffic light in image
+        if (x < 0) or (y < 0) or (x >= cv_image.shape[1]) or (y >= cv_image.shape[0]):
+            return False
+        
+        tmp_img = cv_image
+        crop_value = 90
+        xmin = x - crop_value if (x - crop_value) >= 0 else 0
+        ymin = y - crop_value if (y - crop_value) >= 0 else 0
 
+        xmax = x + crop_value if (x + crop_value) <= tmp_img.shape[1] - 1 else tmp_img.shape[1] - 1
+        ymax = y + crop_value if (y + crop_value) <= tmp_img.shape[0] - 1 else tmp_img.shape[0] - 1
+        crop_img = tmp_img[ymin:ymax, xmin:xmax]
+             
         #Get classification
+        #return self.light_classifier.get_classification(crop_img)
         return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
@@ -219,23 +240,24 @@ class TLDetector(object):
 
         if light:
             state = self.get_light_state(light)
+            x = light.pose.pose.position.x
+            y = light.pose.pose.position.y
 
-            # TODO: ground truth, must be removed before deployed
-            min_distance = 10000
-            nearest_light_index = None
-            for index_light, ground_truth_light in enumerate(self.lights):
-                nearest_light_x = light.pose.pose.position.x
-                nearest_light_y = light.pose.pose.position.y
-                light_x = ground_truth_light.pose.pose.position.x
-                light_y = ground_truth_light.pose.pose.position.y
-                distance_between_traffic_lights = math.sqrt(math.pow(nearest_light_x - light_x, 2) + math.pow(nearest_light_y - light_y, 2))
-                if distance_between_traffic_lights < min_distance:
-                    min_distance = distance_between_traffic_lights
-                    nearest_light_index = index_light
-            state = self.lights[nearest_light_index].state
-            x = self.lights[nearest_light_index].pose.pose.position.x
-            y = self.lights[nearest_light_index].pose.pose.position.y
-            # end_of_todo
+            if False: # Using ground truth
+                min_distance = 10000
+                nearest_light_index = None
+                for index_light, ground_truth_light in enumerate(self.lights):
+                    nearest_light_x = light.pose.pose.position.x
+                    nearest_light_y = light.pose.pose.position.y
+                    light_x = ground_truth_light.pose.pose.position.x
+                    light_y = ground_truth_light.pose.pose.position.y
+                    distance_between_traffic_lights = math.sqrt(math.pow(nearest_light_x - light_x, 2) + math.pow(nearest_light_y - light_y, 2))
+                    if distance_between_traffic_lights < min_distance:
+                        min_distance = distance_between_traffic_lights
+                        nearest_light_index = index_light
+                state = self.lights[nearest_light_index].state
+                x = self.lights[nearest_light_index].pose.pose.position.x
+                y = self.lights[nearest_light_index].pose.pose.position.y
 
             tl_waypoint_index = self.get_closest_waypoint_by_x_y(x, y)
             return tl_waypoint_index, state

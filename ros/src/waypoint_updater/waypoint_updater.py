@@ -35,6 +35,7 @@ class WaypointUpdater(object):
     car_x = -1
     car_y = -1
     car_yaw = 0
+    top_speed = 0
 
     def __init__(self):
         rospy.init_node('waypoint_updater')
@@ -45,8 +46,12 @@ class WaypointUpdater(object):
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
+        #self.top_speed = self.kmph2mps(rospy.get_param('~velocity'))
 
         self.spin()
+
+    def kmph2mps(self, velocity_kmph):
+        return (velocity_kmph * 1000.) / (60. * 60.)
 
     def spin(self):
         rate = rospy.Rate(2)
@@ -78,22 +83,35 @@ class WaypointUpdater(object):
                         if waypoint_index + i == self.nearest_traffic_light_waypoint_index:
                             red_tl_index = i
                             break
-                    if red_tl_index >= 0 and red_tl_index < 37:
-                        proposed_speed = 0
-                    elif red_tl_index >= 37 and red_tl_index < 45:
-                        proposed_speed = 1
-                    elif red_tl_index >= 45 and red_tl_index < 60:
-                        proposed_speed = 3
-                    elif red_tl_index >= 60 and red_tl_index < 70:
-                        proposed_speed = 5
-                    elif red_tl_index >= 70 and red_tl_index < 100:
-                        proposed_speed = 7
-                    elif red_tl_index >= 100 and red_tl_index < 120:
-                        proposed_speed = 9
-                    elif red_tl_index >= 120 and red_tl_index < 200:
-                        proposed_speed = 10
+
+                    # We are in simulator
+                    if self.top_speed > 11:
+                        proposed_speeds = [0, 1, 3, 5, 7, 9, 10]
+                    # We are in Carla
                     else:
-                        proposed_speed = 11.11
+                        proposed_speeds = [0, 0.3, 1, 1.5, 2, 2.5, 3]
+
+                    if red_tl_index != -1: # -1 is green light
+                        # 32 is the distance between stop line and traffic light
+                        # ground truth is using traffic light, the prediction uses stop line
+                        red_tl_index += 32 
+
+                    if red_tl_index >= 0 and red_tl_index < 37:
+                        proposed_speed = proposed_speeds[0]
+                    elif red_tl_index >= 37 and red_tl_index < 45:
+                        proposed_speed = proposed_speeds[1]
+                    elif red_tl_index >= 45 and red_tl_index < 60:
+                        proposed_speed = proposed_speeds[2]
+                    elif red_tl_index >= 60 and red_tl_index < 70:
+                        proposed_speed = proposed_speeds[3]
+                    elif red_tl_index >= 70 and red_tl_index < 100:
+                        proposed_speed = proposed_speeds[4]
+                    elif red_tl_index >= 100 and red_tl_index < 120:
+                        proposed_speed = proposed_speeds[5]
+                    elif red_tl_index >= 120 and red_tl_index < 200:
+                        proposed_speed = proposed_speeds[6]
+                    else:
+                        proposed_speed = self.top_speed
 
                 if start:
                     waypoint.twist.twist.linear.x = proposed_speed
@@ -127,6 +145,10 @@ class WaypointUpdater(object):
 
 
     def waypoints_cb(self, waypoints):
+        self.top_speed = 0
+        for w in waypoints.waypoints:
+            if w.twist.twist.linear.x > self.top_speed:
+                self.top_speed = w.twist.twist.linear.x
         self.waypoints = waypoints.waypoints
 
     def traffic_cb(self, msg):
