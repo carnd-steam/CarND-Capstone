@@ -240,23 +240,24 @@ class TLDetector(object):
 
         if light:
             state = self.get_light_state(light)
+            x = light.pose.pose.position.x
+            y = light.pose.pose.position.y
 
-            # TODO: ground truth, must be removed before deployed
-            min_distance = 10000
-            nearest_light_index = None
-            for index_light, ground_truth_light in enumerate(self.lights):
-                nearest_light_x = light.pose.pose.position.x
-                nearest_light_y = light.pose.pose.position.y
-                light_x = ground_truth_light.pose.pose.position.x
-                light_y = ground_truth_light.pose.pose.position.y
-                distance_between_traffic_lights = math.sqrt(math.pow(nearest_light_x - light_x, 2) + math.pow(nearest_light_y - light_y, 2))
-                if distance_between_traffic_lights < min_distance:
-                    min_distance = distance_between_traffic_lights
-                    nearest_light_index = index_light
-            state = self.lights[nearest_light_index].state
-            x = self.lights[nearest_light_index].pose.pose.position.x
-            y = self.lights[nearest_light_index].pose.pose.position.y
-            # end_of_todo
+            if False: # Using ground truth
+                min_distance = 10000
+                nearest_light_index = None
+                for index_light, ground_truth_light in enumerate(self.lights):
+                    nearest_light_x = light.pose.pose.position.x
+                    nearest_light_y = light.pose.pose.position.y
+                    light_x = ground_truth_light.pose.pose.position.x
+                    light_y = ground_truth_light.pose.pose.position.y
+                    distance_between_traffic_lights = math.sqrt(math.pow(nearest_light_x - light_x, 2) + math.pow(nearest_light_y - light_y, 2))
+                    if distance_between_traffic_lights < min_distance:
+                        min_distance = distance_between_traffic_lights
+                        nearest_light_index = index_light
+                state = self.lights[nearest_light_index].state
+                x = self.lights[nearest_light_index].pose.pose.position.x
+                y = self.lights[nearest_light_index].pose.pose.position.y
 
             tl_waypoint_index = self.get_closest_waypoint_by_x_y(x, y)
             return tl_waypoint_index, state

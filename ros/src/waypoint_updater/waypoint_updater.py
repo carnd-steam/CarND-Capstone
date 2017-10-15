@@ -91,6 +91,11 @@ class WaypointUpdater(object):
                     else:
                         proposed_speeds = [0, 0.3, 1, 1.5, 2, 2.5, 3]
 
+                    if red_tl_index != -1: # -1 is green light
+                        # 32 is the distance between stop line and traffic light
+                        # ground truth is using traffic light, the prediction uses stop line
+                        red_tl_index += 32 
+
                     if red_tl_index >= 0 and red_tl_index < 37:
                         proposed_speed = proposed_speeds[0]
                     elif red_tl_index >= 37 and red_tl_index < 45:
