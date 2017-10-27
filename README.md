@@ -55,7 +55,8 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 
 ![site_green](imgs/test_site_green.png)
 
-
+#### Data Preparation
+#### Model Training
 
 
 
