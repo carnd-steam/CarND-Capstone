@@ -56,12 +56,14 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 ![site_green](imgs/test_site_green.png)
 
 #### Data Preparation
-* Exporting images:  rosrun image_view extract_images image:=/image_color  
-* Annotating images: please install ![Sloth](https://github.com/cvhciKIT/sloth).
+* Exporting images, rosrun image_view extract_images image:=/image_color  
+* Annotating images, please install ![Sloth](https://github.com/cvhciKIT/sloth) and a YAML file maybe a good choice.
+* Generate TFRecord files
 
-#### Model Training
-
-
+#### Model Training 
+* Preparing config file
+* Training models
+* Additional resources
 
 ### Waypoint Updater Part 2
 
