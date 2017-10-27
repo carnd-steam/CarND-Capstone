@@ -64,7 +64,7 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 TensorFlow object detection API approach
 * Preparing config file
 * Training models
-* Additional resources
+* Additional resources: ![Udacity Object Detection Lab](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/595f35e6-b940-400f-afb2-2015319aa640/lessons/69fe4a9c-656e-46c8-bc32-aee9e60b8984/concepts/4ab7a82d-2280-4e44-8b75-9a88b82fa8bb)
 
 ### Waypoint Updater Part 2
 
