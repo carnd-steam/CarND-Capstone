@@ -56,16 +56,16 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 ![site_green](imgs/test_site_green.png)
 
 #### Data Preparation
-* Export images, rosrun image_view extract_images image:=/image_color  
+* Export images, rosrun image_view extract_images image:=/image_color . 
 * Annotate images, please install ![Sloth](https://github.com/cvhciKIT/sloth) and saving as a YAML file maybe a good choice.
-* Generate TensorFlow TFRecord files
+* Generate TensorFlow TFRecord files.
 
 #### Model Training
-TensorFlow object detection API approach
-* Donwload Pre-Trained Models:  ![model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md)
+TensorFlow object detection API approach.
+* Donwload Pre-Trained Models:  ![model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md), As a reminder, MobileNet is the smallest in volume.
 * Prepare config file
-* Train models
-* Additional resources: ![Udacity Object Detection Lab](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/595f35e6-b940-400f-afb2-2015319aa640/lessons/69fe4a9c-656e-46c8-bc32-aee9e60b8984/concepts/4ab7a82d-2280-4e44-8b75-9a88b82fa8bb), ![TensorFlow Object Detection Demo](https://github.com/tensorflow/models/tree/master/research/object_detection)
+* Train models.
+* Additional resources: ![Udacity Object Detection Lab](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/595f35e6-b940-400f-afb2-2015319aa640/lessons/69fe4a9c-656e-46c8-bc32-aee9e60b8984/concepts/4ab7a82d-2280-4e44-8b75-9a88b82fa8bb), ![TensorFlow Object Detection Demo](https://github.com/tensorflow/models/tree/master/research/object_detection).
 
 ### Waypoint Updater Part 2
 
