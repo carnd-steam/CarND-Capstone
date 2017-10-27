@@ -56,8 +56,8 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 ![site_green](imgs/test_site_green.png)
 
 #### Data Preparation
-Exporting images: rosrun image_view extract_images image:=/image_color  
-Annotating images: please install ![Sloth](https://github.com/cvhciKIT/sloth).
+* Exporting images:  rosrun image_view extract_images image:=/image_color  
+* Annotating images: please install ![Sloth](https://github.com/cvhciKIT/sloth).
 
 #### Model Training
 
