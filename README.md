@@ -64,7 +64,20 @@ A pre-trained MobileNet on coco dateset was used. We also collected and annotate
 TensorFlow object detection API approach.
 * Donwload Pre-Trained Models:  ![model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md), as a reminder, MobileNet is the smallest in volume, which is about 20MB~30MB after squeezing graph.
 * Prepare config file
-* Train models.
+* Train models and freeze models.
+
+python models/research/object_detection/train.py \
+    --logtostderr \
+    --pipeline_config_path=ssd_mobilenet_v1_coco.config \
+    --train_dir=train
+    
+    
+python models/research/object_detection/export_inference_graph.py \
+    --input_type image_tensor \
+    --pipeline_config_path ssd_mobilenet_v1_coco.config \
+    --trained_checkpoint_prefix train/model.ckpt-20000 \
+    --output_directory output_inference_graph.pb
+    
 * Additional resources: ![Udacity Object Detection Lab](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/595f35e6-b940-400f-afb2-2015319aa640/lessons/69fe4a9c-656e-46c8-bc32-aee9e60b8984/concepts/4ab7a82d-2280-4e44-8b75-9a88b82fa8bb), ![TensorFlow Object Detection Demo](https://github.com/tensorflow/models/tree/master/research/object_detection).
 
 ### Waypoint Updater Part 2
